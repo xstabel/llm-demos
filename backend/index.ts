@@ -94,8 +94,32 @@ app.get("/products/:id", async (req: Request, res: Response) => {
 // app.get("/newproducts", async (req: Request, res: Response) => {
 //   // YOUR CODE GOES HERE
 //   res.status(501).send("Not implemented yet.");
-// });
-// // ⭐️  DEMO TASK END
+// Get new products from the database
+
+// Get new products from the database
+app.get("/newproducts", async (req: Request, res: Response) => {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - 7); // 7 days ago
+
+  const products = await firestore.collection("inventory")
+    .where("timestamp", ">=", cutoffDate)
+    .get();
+
+  const productsArray: any[] = [];
+  products.forEach((product) => {
+    const p: Product = {
+      id: product.id,
+      name: product.data().name,
+      price: product.data().price,
+      quantity: product.data().quantity,
+      imgfile: product.data().imgfile,
+      timestamp: product.data().timestamp,
+      actualdateadded: product.data().actualdateadded,
+    };
+    productsArray.push(p);
+  });
+  res.send(productsArray);
+});
 
 // ------------------- ------------------- ------------------- ------------------- -------------------
 // START EXPRESS SERVER
@@ -179,6 +203,8 @@ function initFirestoreCollection() {
     "Acai Smoothie Packs",
     "Smores Cereal",
     "Peanut Butter and Jelly Cups",
+    "AppMod Madrid with Chocolate Cookies",
+    "BBVA chocolate cookies"
   ];
   for (let j = 0; j < recentProducts.length; j++) {
     const recent = {
@@ -197,7 +223,7 @@ function initFirestoreCollection() {
     console.log("🆕 Adding (or updating) product in firestore: " + recent.name);
     addOrUpdateFirestore(recent);
   }
-
+  
   // add recent products that are out of stock (To test demo query- only want to show in stock items.)
   const recentProductsOutOfStock = ["Wasabi Party Mix", "Jalapeno Seasoning"];
   for (let k = 0; k < recentProductsOutOfStock.length; k++) {
